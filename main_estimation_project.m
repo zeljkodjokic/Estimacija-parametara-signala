@@ -78,10 +78,15 @@ for i = 1:length(SNR_dB_values)
         errors_FFT(j) = (F0_est_FFT_current - F0_true)^2; % Kvadratna greska
 
         % ML Estimacija
-        % Opseg pretrage za ML estimator:
-        search_min = max(0, F0_true - 15);
-        search_max = min(Fs/2, F0_true + 15);
-        
+        % Opseg pretrage za ML estimator sada centriramo oko FFT procene
+        initial_F_guess_for_ML = F0_est_FFT_current;
+        search_min = max(0, initial_F_guess_for_ML - 5); % 5 Hz oko FFT procene
+        search_max = min(Fs/2, initial_F_guess_for_ML + 5);
+        % Proveri da opseg nije prazan ili obrnut
+        if search_min >= search_max
+            search_min = max(0, F0_true - 10); % Fallback na širi opseg ako je hint loš
+            search_max = min(Fs/2, F0_true + 10);
+        end
         F0_est_ML_current = ml_estimator(x, t_vec, A, phi, Fs, search_min, search_max);
         errors_ML(j) = (F0_est_ML_current - F0_true)^2;
     end
